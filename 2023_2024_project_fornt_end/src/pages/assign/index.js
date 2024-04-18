@@ -1,61 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from '@mui/material/Button';
 import SessionYearMenu from "./components/sessionyear";
 import SessionMenu from "./components/session";
-
-
+import CourseList from "./components/course";
 
 const Assign = () => {
+    const [sessionYear, setSessionYear] = useState('');
+    const [session, setSession] = useState('');
+    const [showCourseList, setShowCourseList] = useState(false); // State to control visibility of CourseList
 
-    const [mySession, setSession] = React.useState('');
+    const handleGetSubjects = () => {
+        // Fetch subjects here
+        // Once subjects are fetched, set showCourseList to true to make CourseList visible
+        setShowCourseList(true);
+    };
 
-  const handleSession = (event) => {
-    setSession(event.target.value);
-  };
-
-  const [myYear, setYear] = React.useState('');
-
-  const handleSessionYear = (event) => {
-    setYear(event.target.value);
-  };
-
-  return (
-
-    <div>
-    <Typography variant='h1' 
-    sx={{
-        ml: 3,
-        lineHeight: 1,
-        fontWeight: 600,
-        fontSize: '1.5rem !important'
-        }}>Assign Course Co-ordinator</Typography>
-
-    <hr />
-    <br />
-
-    
-
-    <div className='dropdowns' 
-     style={{
-        display: "flex",
-        }}>
-    <SessionYearMenu />
-
-    
-    <SessionMenu/>
-
-    <Button variant="contained" sx = {{marginLeft: 25}}>Get Subjects</Button>
-    </div>
-
-    </div>
-    
-  )
+    return (
+        <div>
+            <Typography variant='h1' 
+                sx={{
+                    ml: 3,
+                    lineHeight: 1,
+                    fontWeight: 600,
+                    fontSize: '2.2rem !important'
+                }}>Assign Course Co-ordinator</Typography>
+            <hr />
+            <br />
+            <br/>
+            <div className='dropdowns' style={{ display: "flex" }}>
+                <SessionYearMenu setSessionYear={setSessionYear} />
+                <SessionMenu setSession={setSession} />
+                <Button variant="contained" onClick={handleGetSubjects} sx={{ marginLeft: 25 }}>Get Subjects</Button>
+            </div>
+            <br />
+            <br/>
+            {showCourseList && <CourseList sessionYear={sessionYear} session={session} />} {/* Render CourseList if showCourseList is true */}
+        </div>
+    );
 }
 
-export default Assign
+export default Assign;

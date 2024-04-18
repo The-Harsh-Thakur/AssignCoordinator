@@ -6,41 +6,40 @@ import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 
-const SessionMenu = () => {
-    const [session, setSession] = useState([]);
+const SessionMenu = ({ setSession }) => {
+    const [sessions, setSessions] = useState([]);
 
     useEffect(() => {
-        const fetchSession = async () => {
+        const fetchSessions = async () => {
             try {
                 const response = await axios.get('http://localhost:8000/api/session'); // Update the endpoint as per your Laravel route
-                setSession(response.data);
+                setSessions(response.data);
             } catch (error) {
-                console.error('Error fetching session years:', error);
+                console.error('Error fetching sessions:', error);
             }
         };
 
-        fetchSession();
+        fetchSessions();
     }, []);
 
     return (
-        
         <Box sx={{ minWidth: 250, marginLeft: 25 }}>
-      <FormControl fullWidth>
-        <InputLabel id="session">Session</InputLabel>
-        <Select label="Session"
-        labelId="session-select"
-          id="session"
-         >
-            {session.map((session) => (
-                <MenuItem key={session.id} value={session.session}>
-                    {session.session}
-                </MenuItem>
-            ))}
-        </Select>
-        
-          
-      </FormControl>
-    </Box>
+            <FormControl fullWidth>
+                <InputLabel id="session-label">Session</InputLabel>
+                <Select
+                    labelId="session-label"
+                    id="session"
+                    onChange={(event) => setSession(event.target.value)} // Pass the selected session value to the parent component
+                    label="Session"
+                >
+                    {sessions.map((sessionItem) => (
+                        <MenuItem key={sessionItem.id} value={sessionItem.session}>
+                            {sessionItem.session}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+        </Box>
     );
 };
 

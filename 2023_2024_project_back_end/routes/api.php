@@ -1,9 +1,16 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SessionYearController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\CoordinatorController;
+use App\Http\Controllers\StatusController;
+use App\Http\Controllers\CbcsAssignCourseCoordinatorController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +49,16 @@ Route::controller(AuthController::class)->group(function () {
     Route::get('/session-years', [SessionYearController::class, 'getSessionYears']);
 
     Route::get('/session', [SessionController::class,'getSession']);
+
+    Route::get('/subjects', [SubjectController::class,'getSubjects']);
+
+    Route::get('/faculty', [FacultyController::class, 'getFaculty']);
+
+    Route::post('/assign-coordinator', [CoordinatorController::class, 'assignCoordinator']);
+
+    Route::put('/update-status', [StatusController::class, 'assignStatus']);
+
+    Route::put('/coordinators/update-status', [CbcsAssignCourseCoordinatorController::class, 'updateStatus']);
 
 
 });

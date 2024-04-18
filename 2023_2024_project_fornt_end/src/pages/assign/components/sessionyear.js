@@ -6,7 +6,7 @@ import Box from '@mui/material/Box';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 
-const SessionYearMenu = () => {
+const SessionYearMenu = ({ setSessionYear }) => {
     const [sessionYears, setSessionYears] = useState([]);
 
     useEffect(() => {
@@ -23,25 +23,23 @@ const SessionYearMenu = () => {
     }, []);
 
     return (
-        
         <Box sx={{ minWidth: 250 }}>
-      <FormControl fullWidth>
-        <InputLabel id="sessionyear">Year</InputLabel>
-        <Select label="Session Year"
-        labelId="sessionyear-select"
-          id="sessionyear"
-          
-         >
-            {sessionYears.map((year) => (
-                <MenuItem key={year.id} value={year.session_year}>
-                    {year.session_year}
-                </MenuItem>
-            ))}
-        </Select>
-        
-          
-      </FormControl>
-    </Box>
+            <FormControl fullWidth>
+                <InputLabel id="sessionyear-label">Year</InputLabel>
+                <Select
+                    labelId="sessionyear-label"
+                    id="sessionyear"
+                    onChange={(event) => setSessionYear(event.target.value)} // Pass the selected session year value to the parent component
+                    label="Session Year"
+                >
+                    {sessionYears.map((year) => (
+                        <MenuItem key={year.id} value={year.session_year}>
+                            {year.session_year}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+        </Box>
     );
 };
 
