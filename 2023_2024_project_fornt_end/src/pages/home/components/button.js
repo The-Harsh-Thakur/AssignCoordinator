@@ -9,9 +9,11 @@ const AssignButton = () => {
     };
   
     return (
+      <div style={{marginLeft: 25, marginTop: 40}}>
       <Button variant="contained" onClick={handleClick}>
-        Assign
+        Assign Course Coordinator
       </Button>
+      </div>
     );
   };
 

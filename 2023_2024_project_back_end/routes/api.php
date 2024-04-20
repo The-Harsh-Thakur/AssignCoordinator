@@ -7,9 +7,8 @@ use App\Http\Controllers\SessionYearController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\FacultyController;
-use App\Http\Controllers\CoordinatorController;
-use App\Http\Controllers\StatusController;
-use App\Http\Controllers\CbcsAssignCourseCoordinatorController;
+use App\Http\Controllers\SubjectStatController;
+use App\Http\Controllers\FacultyStatController;
 
 
 /*
@@ -54,12 +53,8 @@ Route::controller(AuthController::class)->group(function () {
 
     Route::get('/faculty', [FacultyController::class, 'getFaculty']);
 
-    Route::post('/assign-coordinator', [CoordinatorController::class, 'assignCoordinator']);
-
-    Route::put('/update-status', [StatusController::class, 'assignStatus']);
-
-    Route::put('/coordinators/update-status', [CbcsAssignCourseCoordinatorController::class, 'updateStatus']);
-
+    Route::put('/facultystat/{id}', [FacultyStatController::class, 'updateFaculty']);
+    Route::put('/subjectstat/{id}', [SubjectStatController::class, 'updateSubject']);
 
 });
 

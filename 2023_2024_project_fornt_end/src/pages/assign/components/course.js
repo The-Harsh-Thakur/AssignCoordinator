@@ -14,20 +14,16 @@ import TextField from '@mui/material/TextField';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Alert from '@mui/material/Alert';
-import Snackbar from '@mui/material/Snackbar';
-
+import CircularProgress from '@mui/material/CircularProgress';
 
 const CourseList = ({ sessionYear, session }) => {
     const [subjects, setSubjects] = useState([]);
-    const [selectedSubject, setSelectedSubject] = useState(null); // State to store the selected subject
-    const [openDialog, setOpenDialog] = useState(false); // State to control the dialog visibility
-    const [searchQuery, setSearchQuery] = useState(''); // State to store the search query
-    const [faculties, setFaculties] = useState([]); // State to store faculties
-    const [selectedFaculty, setSelectedFaculty] = useState(null); // State to store the selected faculty
-    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false); // State to control the confirmation dialog visibility
-    const [alertMessage, setAlertMessage] = useState(''); // State to store the alert message
-    const [alertSeverity, setAlertSeverity] = useState('success'); // State to store the alert severity
+    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [faculties, setFaculties] = useState([]);
+    const [selectedFaculty, setSelectedFaculty] = useState(null);
+    const [loading, setLoading] = useState(false); // State to track loading
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -50,7 +46,7 @@ const CourseList = ({ sessionYear, session }) => {
     useEffect(() => {
         const fetchFaculties = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/api/faculty'); // Update the endpoint as per your Laravel route
+                const response = await axios.get('http://localhost:8000/api/faculty');
                 setFaculties(response.data);
             } catch (error) {
                 console.error('Error fetching faculties:', error);
@@ -63,37 +59,17 @@ const CourseList = ({ sessionYear, session }) => {
     const handleClick = (subject) => {
         setSelectedSubject(subject);
         setOpenDialog(true);
+        // Check if any faculty is already assigned to this subject
+        const facultyAlreadyAssigned = faculties.find(faculty => faculty.sub_code === subject.sub_code && faculty.assigned === 1);
+        if (facultyAlreadyAssigned) {
+            setSelectedFaculty(facultyAlreadyAssigned.id.toString()); // Preselect the faculty already assigned
+        } else {
+            setSelectedFaculty(null); // If no faculty assigned, reset selected faculty
+        }
     };
 
     const handleCloseDialog = () => {
-        if (!selectedFaculty) {
-            setAlertMessage('Please select a faculty.');
-            setAlertSeverity('error');
-            return;
-        }
-        setConfirmDialogOpen(true);
-    };
-
-    const handleConfirmAssign = async () => {
-        try {
-            await axios.post('http://localhost:8000/api/assign-coordinator', {
-                sub_code: selectedSubject.sub_code,
-                offered_to_name: selectedFaculty.offered_to_name
-            });
-            setAlertMessage('Course coordinator assigned successfully.');
-            setAlertSeverity('success');
-        } catch (error) {
-            console.error('Error assigning course coordinator:', error);
-            setAlertMessage('Error assigning course coordinator. Please try again.');
-            setAlertSeverity('error');
-        }
         setOpenDialog(false);
-        setConfirmDialogOpen(false);
-    };
-
-    const handleCancelAssign = () => {
-        setOpenDialog(false);
-        setConfirmDialogOpen(false);
     };
 
     const handleSearchChange = (event) => {
@@ -104,15 +80,86 @@ const CourseList = ({ sessionYear, session }) => {
         setSelectedFaculty(event.target.value);
     };
 
-    // Filter subjects based on the search query
     const filteredSubjects = subjects.filter(subject =>
         subject.sub_name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleAssign = async () => {
+        if (!selectedSubject || !selectedFaculty) return;
+
+        try {
+            // Update selected subject's assign attribute
+            await axios.put(`http://localhost:8000/api/subjectstat/${selectedSubject.id}`, { assigned: 1 });
+
+            // If a different faculty is selected, revert assigned value for the previously selected faculty
+            if (selectedFaculty !== selectedSubject.offered_to_name) {
+                const prevFaculty = faculties.find(faculty => faculty.sub_code === selectedSubject.sub_code && faculty.assigned === 1);
+                if (prevFaculty) {
+                    await axios.put(`http://localhost:8000/api/facultystat/${prevFaculty.id}`, { assigned: 0 });
+                }
+            }
+
+            // Update selected faculty's assign attribute
+            await axios.put(`http://localhost:8000/api/facultystat/${selectedFaculty}`, { assigned: 1 });
+
+            // Refetch subjects and faculties data
+            const updatedSubjects = await axios.get('http://localhost:8000/api/subjects', {
+                params: {
+                    session_year: sessionYear,
+                    session: session
+                }
+            });
+            setSubjects(updatedSubjects.data);
+
+            const updatedFaculties = await axios.get('http://localhost:8000/api/faculty');
+            setFaculties(updatedFaculties.data);
+        } catch (error) {
+            console.error('Error updating assignments:', error);
+        }
+
+        setOpenDialog(false);
+    };
+
+    const handleAssignSingleSubjects = async () => {
+        try {
+            setLoading(true); // Set loading to true
+            const singleSubjects = subjects.filter(subject =>
+                faculties.filter(faculty => faculty.sub_code === subject.sub_code).length === 1
+            );
+
+            for (const subject of singleSubjects) {
+                const faculty = faculties.find(faculty => faculty.sub_code === subject.sub_code);
+                if (faculty) {
+                    await axios.put(`http://localhost:8000/api/subjectstat/${subject.id}`, { assigned: 1 });
+                    await axios.put(`http://localhost:8000/api/facultystat/${faculty.id}`, { assigned: 1 });
+                }
+            }
+
+            // Refetch subjects and faculties data
+            const updatedSubjects = await axios.get('http://localhost:8000/api/subjects', {
+                params: {
+                    session_year: sessionYear,
+                    session: session
+                }
+            });
+            setSubjects(updatedSubjects.data);
+
+            const updatedFaculties = await axios.get('http://localhost:8000/api/faculty');
+            setFaculties(updatedFaculties.data);
+        } catch (error) {
+            console.error('Error assigning single subjects:', error);
+        } finally {
+            setLoading(false); // Set loading to false after completion
+        }
+    };
+
     return (
         <div>
             <hr />
+            <div style={{display: "flex", justifyContent: "space-between", marginBottom: "1rem", marginTop: "1rem"}}>
             <Typography variant="h4" sx={{ mt: 3, ml: 3, fontSize: '1.5rem !important' }}>Course List</Typography>
+            <Button variant="contained" onClick={handleAssignSingleSubjects} style={{ marginLeft: '1rem' }}>Assign Single Coordinator</Button>
+            </div>
             <Box sx={{ ml: 3 }}>
                 <TextField
                     label="Search"
@@ -122,21 +169,25 @@ const CourseList = ({ sessionYear, session }) => {
                     sx={{ mt: 2, mb: 2, width: '100%' }}
                 />
             </Box>
-            <List sx={{ ml: 3 }}>
-                {filteredSubjects.map(subject => (
-                    <ListItem key={subject.id}>
-                        <Button onClick={() => handleClick(subject)} style={{ backgroundColor: 'green', color: 'white' }}>
-                            <ListItemText primary={subject.sub_name} />
-                        </Button>
-                    </ListItem>
-                ))}
-            </List>
+            {loading ? ( // Show loading screen if loading is true
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                    <CircularProgress />
+                </Box>
+            ) : (
+                <List sx={{ ml: 3 }}>
+                    {filteredSubjects.map(subject => (
+                        <ListItem key={subject.id}>
+                            <Button onClick={() => handleClick(subject)} style={{ backgroundColor: subject.assigned === 0 ? 'red' : 'green', color: 'white' }}>
+                                <ListItemText primary={subject.sub_name} />
+                            </Button>
+                        </ListItem>
+                    ))}
+                </List>
+            )}
 
-            {/* Dialog for assigning course coordinator */}
             <Dialog open={openDialog} onClose={handleCloseDialog}>
                 <DialogTitle>Assign Course Coordinator</DialogTitle>
                 <DialogContent>
-                    {/* Content of the dialog */}
                     {selectedSubject && (
                         <div>
                             <Typography>
@@ -153,7 +204,7 @@ const CourseList = ({ sessionYear, session }) => {
                                     .map(faculty => (
                                         <FormControlLabel
                                             key={faculty.id}
-                                            value={faculty.offered_to_name}
+                                            value={faculty.id.toString()}
                                             control={<Radio />}
                                             label={faculty.offered_to_name}
                                         />
@@ -167,28 +218,11 @@ const CourseList = ({ sessionYear, session }) => {
                     <Button onClick={handleCloseDialog} color="primary">
                         Cancel
                     </Button>
-                    <Button onClick={handleCloseDialog} color="primary">
+                    <Button onClick={handleAssign} color="primary">
                         Assign
                     </Button>
                 </DialogActions>
             </Dialog>
-
-            {/* Confirmation dialog */}
-            <Dialog open={confirmDialogOpen} onClose={handleCancelAssign}>
-                <DialogTitle>Confirmation</DialogTitle>
-                <DialogContent>Are you sure you want to assign this course coordinator?</DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelAssign} color="primary">Cancel</Button>
-                    <Button onClick={handleConfirmAssign} color="primary">OK</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Alert */}
-            <Snackbar open={alertMessage !== ''} autoHideDuration={6000} onClose={() => setAlertMessage('')}>
-                <Alert onClose={() => setAlertMessage('')} severity={alertSeverity} sx={{ width: '100%' }}>
-                    {alertMessage}
-                </Alert>
-            </Snackbar>
         </div>
     );
 };

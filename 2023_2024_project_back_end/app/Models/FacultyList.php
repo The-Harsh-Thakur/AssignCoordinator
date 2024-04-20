@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class FacultyList extends Model
 {
-    protected $table = 'cbcs_assign_course_coordinatord';
-    protected $fillable = ['offered_to_name', 'sub_code', 'session', 'session_year', 'status']; // Fillable fields in the table
+    public $table = 'cbcs_assign_course_coordinatord';
+    public $fillable = ['id', 'offered_to_name', 'sub_code', 'session', 'session_year', 'status', 'assigned']; // Fillable fields in the table
     // Add any relationships or additional methods as needed
 }

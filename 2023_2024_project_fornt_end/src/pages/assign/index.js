@@ -25,7 +25,7 @@ const Assign = () => {
                     lineHeight: 1,
                     fontWeight: 600,
                     fontSize: '2.2rem !important'
-                }}>Assign Course Co-ordinator</Typography>
+                }}>Assign Course Coordinator</Typography>
             <hr />
             <br />
             <br/>
